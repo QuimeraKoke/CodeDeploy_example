@@ -1,0 +1,60 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": ""
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-west-2",
+    "source_ami": "ami-a58d0dc5",
+    "instance_type": "t2.micro",
+    "ssh_username": "ubuntu",
+    "ami_name": "packer-example {{timestamp}}",
+    "tags" : {
+          "Name": "Hello Packer-AWS"
+        }
+  }],
+  "provisioners": [{
+      "type": "shell",
+      "inline": [
+        "mkdir -p $HOME/project/Assets",
+        "mkdir -p $HOME/project/Code"
+      ]},
+    {
+      "type" : "file",
+      "source" : "Assets/",
+      "destination" : "$HOME/project/Assets"
+    },
+    {
+      "type" : "file",
+      "source" : "Code/",
+      "destination" : "$HOME/project/Code"
+    },
+    {
+    "type":"shell",
+    "inline" : [
+      "sleep 30",
+      "sudo apt-get update",
+      "sudo apt-get install python-pip -y",
+      "sudo pip install virtualenv",
+      "mkdir $HOME/virtual_envs",
+      "virtualenv $HOME/virtual_envs/code_deploy",
+      "$HOME/virtual_envs/code_deploy/bin/pip install --upgrade pip",
+      "$HOME/virtual_envs/code_deploy/bin/pip install -r $HOME/project/Assets/requirements.txt",
+      "sudo mkdir /var/code_deploy",
+      "sudo chown ubuntu:www-data /var/code_deploy",
+      "mv $HOME/project/Code /var/code_deploy/",
+      "sudo mv $HOME/project/Assets/gunicorn.conf /etc/systemd/system/codeploy.service",
+      "sudo systemctl start codeploy.service",
+      "sudo systemctl enable codeploy.service",
+      "sudo apt-get install nginx -y",
+      "sudo mv $HOME/project/Assets/nginx.conf /etc/nginx/sites-available/",
+      "sudo ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/codedeploy",
+      "sudo nginx -t",
+      "sudo systemctl reload nginx"
+    ]
+  }]
+
+}
