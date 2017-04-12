@@ -1,7 +1,7 @@
 {
   "variables": {
     "aws_access_key": "",
-    "aws_secret_key": ""
+    "aws_secret_key": "",
   },
   "builders": [{
     "type": "amazon-ebs",
@@ -11,9 +11,9 @@
     "source_ami": "ami-a58d0dc5",
     "instance_type": "t2.micro",
     "ssh_username": "ubuntu",
-    "ami_name": "packer-example {{timestamp}}",
+    "ami_name": "{{env `ENV_NAME`}} {{timestamp}}",
     "tags" : {
-          "Name": "Hello Packer-AWS"
+          "Name": "{{.ENV_NAME}}"
         }
   }],
   "provisioners": [{
